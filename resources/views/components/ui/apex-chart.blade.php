@@ -126,6 +126,12 @@
 
                 if (!legendContainer) return;
 
+                var tooltips = {
+                    '{{ __("Market Gain") }}': '{{ __("Unrealized profit/loss: Market Value minus Cost Basis") }}',
+                    '{{ __("Market Value") }}': '{{ __("Current total value of all holdings at today\'s prices") }}',
+                    '{{ __("Cost Basis") }}': '{{ __("Total amount originally invested (purchase price × quantity)") }}',
+                };
+
                 legendContainer.innerHTML = ''; // Clear any existing legend items
                 
                 chartContext.w.globals.seriesNames.forEach(function (seriesName, i) {
@@ -134,6 +140,9 @@
                     var legendItem = document.createElement('div');
                     legendItem.classList.add('flex', 'items-center', 'my-2', 'mr-4', 'text-xs', 'md:text-sm', 'cursor-pointer');
                     legendItem.setAttribute('data-series-index', i);
+                    if (tooltips[seriesName]) {
+                        legendItem.setAttribute('title', tooltips[seriesName]);
+                    }
 
                     var colorBox = document.createElement('span');
                     colorBox.id = seriesName
