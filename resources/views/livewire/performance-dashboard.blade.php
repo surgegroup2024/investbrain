@@ -115,24 +115,30 @@ new class extends Component
     <style>
         .gain-pos { color: #4ade80 !important; }
         .gain-neg { color: #f87171 !important; }
+        .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; }
+        @media (min-width: 48rem) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
     </style>
-    {{-- Summary cards --}}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    {{-- Summary stats (horizontal like dashboard) --}}
+    <div class="mb-6">
         <x-ui.card dense>
-            <div class="text-sm text-base-content/60">{{ __('Total Market Value') }}</div>
-            <div class="text-xl font-bold mt-1">{{ Number::currency($this->totalMarketValue, 'USD') }}</div>
-        </x-ui.card>
-        <x-ui.card dense>
-            <div class="text-sm text-base-content/60">{{ __('Total Cost Basis') }}</div>
-            <div class="text-xl font-bold mt-1">{{ Number::currency($this->totalCostBasis, 'USD') }}</div>
-        </x-ui.card>
-        <x-ui.card dense>
-            <div class="text-sm text-base-content/60">{{ __('Total Gain/Loss') }}</div>
-            <div class="text-xl font-bold gain-pos mt-1" style="color: {{ $this->totalGain >= 0 ? '#4ade80' : '#f87171' }}">{{ Number::currency($this->totalGain, 'USD') }}</div>
-        </x-ui.card>
-        <x-ui.card dense>
-            <div class="text-sm text-base-content/60">{{ __('Positions') }}</div>
-            <div class="text-xl font-bold mt-1">{{ count($this->holdings) }}</div>
+            <div class="stat-grid divide-y md:divide-y-0 md:divide-x divide-base-300">
+                <div class="p-4" title="{{ __('Current total value of all holdings at today\'s prices') }}">
+                    <div class="text-xs font-medium text-base-content/60">{{ __('Total Market Value') }}</div>
+                    <div class="mt-1 text-xl font-black">{{ Number::currency($this->totalMarketValue, 'USD') }}</div>
+                </div>
+                <div class="p-4" title="{{ __('Total amount originally invested (purchase price × quantity)') }}">
+                    <div class="text-xs font-medium text-base-content/60">{{ __('Total Cost Basis') }}</div>
+                    <div class="mt-1 text-xl font-black">{{ Number::currency($this->totalCostBasis, 'USD') }}</div>
+                </div>
+                <div class="p-4" title="{{ __('Unrealized profit/loss: Market Value minus Cost Basis') }}">
+                    <div class="text-xs font-medium text-base-content/60">{{ __('Total Gain/Loss') }}</div>
+                    <div class="mt-1 text-xl font-black {{ $this->totalGain >= 0 ? 'gain-pos' : 'gain-neg' }}">{{ Number::currency($this->totalGain, 'USD') }}</div>
+                </div>
+                <div class="p-4" title="{{ __('Number of unique stock/ETF positions held') }}">
+                    <div class="text-xs font-medium text-base-content/60">{{ __('Positions') }}</div>
+                    <div class="mt-1 text-xl font-black">{{ count($this->holdings) }}</div>
+                </div>
+            </div>
         </x-ui.card>
     </div>
 
