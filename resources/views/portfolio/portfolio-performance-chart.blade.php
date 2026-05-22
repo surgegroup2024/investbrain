@@ -74,6 +74,9 @@ new #[Lazy] class extends Component
         $marketGainData = [];
 
         foreach ($dailyChange as $data) {
+            if (is_string($data)) {
+                continue;
+            }
             $date = $data->date;
             $marketGainData[] = [$date, round($data->total_market_gain, 2)];
             $marketValueData[] = [$date, round($data->total_market_value, 2)];

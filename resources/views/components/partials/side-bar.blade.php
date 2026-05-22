@@ -66,22 +66,9 @@ new class extends Component
 
         <x-ui.menu class="space-y-2 text-wrap w-full overflow-x-hidden" activate-by-route="true">
             <x-ui.menu-item icon="o-home" title="{{ __('Dashboard') }}" link="{{ route('dashboard') }}" class="font-medium text-md" />
-
-            @foreach (auth()->user()->portfolios as $portfolio)
-                <x-ui.menu-item 
-                    :title="$portfolio->title" 
-                    icon="o-document"
-                    :badge="$portfolio->wishlist ? __('Wishlist') : null" 
-                    badge-classes="badge-secondary badge-outline"
-                    link="{{ route('portfolio.show', ['portfolio' => $portfolio->id ]) }}" 
-                    class="font-medium text-md"
-                />
-            @endforeach
-            
-            <x-ui.menu-item icon="o-document-plus" title="{{ __('Create Portfolio') }}" link="{{ route('portfolio.create') }}" class="font-medium text-md" />
-
-            <x-ui.menu-item icon="o-banknotes" title="{{ __('Transactions') }}" link="{{ route('transaction.index') }}" class="font-medium text-md" />
-       
+            <x-ui.menu-item icon="o-chart-bar-square" title="{{ __('Holdings') }}" link="{{ route('performance.index') }}" class="font-medium text-md" />
+            <x-ui.menu-item icon="o-queue-list" title="{{ __('Activity') }}" link="{{ route('activity.index') }}" class="font-medium text-md" />
+            <x-ui.menu-item icon="o-calculator" title="{{ __('Tax Center') }}" link="{{ route('tax.index') }}" class="font-medium text-md" />
         </x-ui.menu>
         <div class="flex-1"></div>
 

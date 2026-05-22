@@ -18,6 +18,9 @@ class PortfolioRequest extends FormRequest
             'title' => ['required', 'string', 'min:5', 'max:255'],
             'notes' => ['sometimes', 'nullable', 'string'],
             'wishlist' => ['sometimes', 'nullable', 'boolean'],
+            'account_type' => ['sometimes', 'nullable', 'string', 'in:INDIVIDUAL,JOINT,IRA,ROTH_IRA,SEP_IRA,401K,403B,529,HSA,OTHER'],
+            'broker_value' => ['sometimes', 'nullable', 'numeric'],
+            'broker_value_updated_at' => ['sometimes', 'nullable', 'date'],
         ];
 
         if (! is_null($this->portfolio)) {

@@ -44,10 +44,6 @@ class RefreshSplitData extends Command
     {
         $holdings = Holding::distinct();
 
-        if (! ($this->option('force') ?? false)) {
-            $holdings->where('quantity', '>', 0);
-        }
-
         foreach ($holdings->get(['symbol']) as $holding) {
             $this->line('Refreshing '.$holding->symbol);
 

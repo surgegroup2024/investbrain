@@ -37,6 +37,7 @@ class HoldingsTable extends Component implements HasActions, HasSchemas, HasTabl
             ->query(
                 Holding::query()
                     ->portfolio($this->portfolio->id)
+                    ->where('quantity', '>', 0)
                     ->withMarketData()
                     ->withCount(['transactions as num_transactions' => function ($query) {
                         return $query->whereRaw('transactions.symbol = holdings.symbol');
@@ -76,7 +77,7 @@ class HoldingsTable extends Component implements HasActions, HasSchemas, HasTabl
                     ->label(__('Market Gain/Loss'))
                     ->sortable()
                     ->html()
-                    ->formatStateUsing(fn ($state, $record) => Number::currency($state ?? 0, $record->market_data?->currency).view('components.ui.gain-loss-arrow-badge', [
+                    ->formatStateUsing(fn ($state, $record) => '<span style="color: '.(($state ?? 0) >= 0 ? '#4ade80' : '#f87171').'">'.Number::currency($state ?? 0, $record->market_data?->currency).'</span>'.view('components.ui.gain-loss-arrow-badge', [
                         'costBasis' => $record->average_cost_basis,
                         'marketValue' => $record->market_data?->market_value,
                         'small' => true,
@@ -84,7 +85,10 @@ class HoldingsTable extends Component implements HasActions, HasSchemas, HasTabl
                 TextColumn::make('realized_gain_dollars')
                     ->label(__('Realized Gain/Loss'))
                     ->sortable()
-                    ->formatStateUsing(fn ($state, $record) => Number::currency($state ?? 0, $record->market_data?->currency)),
+                    ->html()
+                    ->formatStateUsing(fn ($state, $record) => ($state ?? 0) != 0
+                        ? '<span style="color: '.(($state ?? 0) >= 0 ? '#4ade80' : '#f87171').'">'.Number::currency($state ?? 0, $record->market_data?->currency).'</span>'
+                        : Number::currency($state ?? 0, $record->market_data?->currency)),
                 TextColumn::make('dividends_earned')
                     ->label(__('Dividends Earned'))
                     ->sortable()

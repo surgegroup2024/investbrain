@@ -12,6 +12,13 @@ use App\Http\Controllers\PrivacyPolicyController;
 use App\Http\Controllers\TermsOfServiceController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserProfileController;
+use App\Http\Controllers\AccountsController;
+use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\OptionsIncomeController;
+use App\Http\Controllers\IncomeController;
+use App\Http\Controllers\PerformanceController;
+use App\Http\Controllers\AllocationController;
+use App\Http\Controllers\TaxCenterController;
 use App\Support\Spotlight;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -42,6 +49,15 @@ Route::middleware(['auth:sanctum', 'web'])->group(function () {
     Route::get('/portfolio/{portfolio}/{symbol}', [HoldingController::class, 'show'])->name('holding.show');
 
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transaction.index');
+
+    // Insight pages
+    Route::get('/accounts', [AccountsController::class, 'index'])->name('accounts.index');
+    Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
+    Route::get('/options', [OptionsIncomeController::class, 'index'])->name('options.index');
+    Route::get('/income', [IncomeController::class, 'index'])->name('income.index');
+    Route::get('/performance', [PerformanceController::class, 'index'])->name('performance.index');
+    Route::get('/allocation', [AllocationController::class, 'index'])->name('allocation.index');
+    Route::get('/tax', [TaxCenterController::class, 'index'])->name('tax.index');
 
     Route::get('/spotlight', function (Request $request) {
         return app()->make(Spotlight::class)->search($request);

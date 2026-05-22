@@ -105,7 +105,6 @@ class Split extends Model
                 'splits.symbol' => $symbol,
             ])
             ->whereDate('splits.date', '>', DB::raw("COALESCE(holdings.splits_synced_at, '1901-01-01')"))
-            ->where('holdings.quantity', '>', 0)
             ->join('holdings', 'splits.symbol', 'holdings.symbol')
             ->orderBy('splits.date', 'ASC')
             ->get();
@@ -124,6 +123,7 @@ class Split extends Model
 
             if ($qty_owned > 0) {
 
+                // Position held through split: add adjustment transaction
                 Transaction::create([
                     'symbol' => $split->symbol,
                     'portfolio_id' => $split->portfolio_id,
@@ -136,13 +136,35 @@ class Split extends Model
                     'updated_at' => now(),
                 ]);
 
-                Holding::where([
+            } else {
+
+                // Position was fully sold before split: adjust all prior transactions
+                // directly so quantities align with Yahoo Finance split-adjusted prices
+                $prior_transactions = Transaction::where([
                     'symbol' => $split->symbol,
                     'portfolio_id' => $split->portfolio_id,
-                ])->update([
-                    'splits_synced_at' => now(),
-                ]);
+                ])
+                    ->whereDate('transactions.date', '<', $split->date->toDateString())
+                    ->get();
+
+                foreach ($prior_transactions as $transaction) {
+                    $transaction->quantity = $transaction->quantity * $split->split_amount;
+                    $transaction->cost_basis = $transaction->cost_basis > 0
+                        ? $transaction->cost_basis / $split->split_amount
+                        : 0;
+                    if ($transaction->sale_price) {
+                        $transaction->sale_price = $transaction->sale_price / $split->split_amount;
+                    }
+                    $transaction->save();
+                }
             }
+
+            Holding::where([
+                'symbol' => $split->symbol,
+                'portfolio_id' => $split->portfolio_id,
+            ])->update([
+                'splits_synced_at' => now(),
+            ]);
         }
     }
 }

@@ -25,6 +25,9 @@ class Portfolio extends Model
         'title',
         'notes',
         'wishlist',
+        'account_type',
+        'broker_value',
+        'broker_value_updated_at',
     ];
 
     public static ?string $owner_id = null;
@@ -43,6 +46,8 @@ class Portfolio extends Model
 
     protected $casts = [
         'wishlist' => 'boolean',
+        'broker_value' => 'float',
+        'broker_value_updated_at' => 'datetime',
     ];
 
     protected $with = ['users', 'transactions'];
@@ -67,6 +72,16 @@ class Portfolio extends Model
     public function daily_change()
     {
         return $this->hasMany(DailyChange::class);
+    }
+
+    public function cashFlows()
+    {
+        return $this->hasMany(CashFlow::class)->orderBy('date', 'DESC');
+    }
+
+    public function optionActivities()
+    {
+        return $this->hasMany(OptionActivity::class)->orderBy('date', 'DESC');
     }
 
     public function chatWithConversation(): \Illuminate\Database\Eloquent\Relations\MorphOne
@@ -234,6 +249,92 @@ class Portfolio extends Model
         }
 
         return $close;
+    }
+
+    /**
+     * Calculate capital metrics: total deposits, withdrawals, net invested, ROI
+     */
+    public function capitalMetrics(): array
+    {
+        $deposits = (float) $this->cashFlows()->deposits()->sum('amount');
+        $withdrawals = abs((float) $this->cashFlows()->withdrawals()->sum('amount'));
+        $netInvested = $deposits - $withdrawals;
+
+        $holdings = $this->holdings()->get();
+        $calculatedValue = (float) $holdings->sum('total_market_value');
+        $marketValue = $this->getEffectiveMarketValue($calculatedValue);
+        $roi = $netInvested > 0 ? (($marketValue + $withdrawals - $deposits) / $deposits) * 100 : 0;
+
+        // Money-weighted return (simple IRR approximation using modified Dietz)
+        $irr = $this->calculateModifiedDietz();
+
+        // Determine history length for annualized display
+        $firstFlow = $this->cashFlows()->reorder('date', 'asc')->first();
+        $yearsOfHistory = $firstFlow ? $firstFlow->date->diffInDays(now()) / 365.25 : 0;
+
+        return [
+            'total_deposits' => round($deposits, 2),
+            'total_withdrawals' => round($withdrawals, 2),
+            'net_invested' => round($netInvested, 2),
+            'current_value' => round($marketValue, 2),
+            'total_return_dollars' => round($marketValue + $withdrawals - $deposits, 2),
+            'total_return_pct' => round($roi, 2),
+            'modified_dietz_return' => round($irr, 2),
+            'years_of_history' => round($yearsOfHistory, 1),
+        ];
+    }
+
+    /**
+     * Get effective market value, preferring broker_value when it significantly differs from calculated.
+     */
+    protected function getEffectiveMarketValue(float $calculatedValue): float
+    {
+        if ($this->broker_value && abs($this->broker_value - $calculatedValue) > $this->broker_value * 0.1) {
+            return (float) $this->broker_value;
+        }
+
+        return $calculatedValue;
+    }
+
+    /**
+     * Modified Dietz method for money-weighted return
+     */
+    protected function calculateModifiedDietz(): float
+    {
+        $flows = $this->cashFlows()->reorder('date', 'asc')->get();
+        if ($flows->isEmpty()) {
+            return 0.0;
+        }
+
+        $startDate = $flows->first()->date;
+        $endDate = Carbon::now();
+        $totalDays = (float) $startDate->diffInDays($endDate);
+
+        if ($totalDays <= 0) {
+            return 0.0;
+        }
+
+        $startValue = 0; // assume portfolio started at 0
+        $calculatedEnd = (float) $this->holdings()->get()->sum('total_market_value');
+        $endValue = $this->getEffectiveMarketValue($calculatedEnd);
+
+        $weightedFlows = 0;
+        $totalFlows = 0;
+
+        foreach ($flows as $flow) {
+            $amount = $flow->type === 'DEPOSIT' ? (float) $flow->amount : -abs((float) $flow->amount);
+            $daysRemaining = (float) $flow->date->diffInDays($endDate);
+            $weight = $daysRemaining / $totalDays;
+            $weightedFlows += $amount * $weight;
+            $totalFlows += $amount;
+        }
+
+        $denominator = $startValue + $weightedFlows;
+        if (abs($denominator) < 0.01) {
+            return 0.0;
+        }
+
+        return (($endValue - $startValue - $totalFlows) / $denominator) * 100;
     }
 
     public function getFormattedHoldings()
