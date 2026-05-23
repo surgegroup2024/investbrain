@@ -49,9 +49,20 @@ class CaptureDailyChange extends Command
                 ->portfolio($portfolio->id)
                 ->getPortfolioMetrics(config('investbrain.base_currency'));
 
+            $calculatedValue = $metrics->get('total_market_value');
+
+            // Prefer broker-reported value when available and recent (includes options, cash, etc.)
+            $marketValue = $calculatedValue;
+            if ($portfolio->broker_value
+                && $portfolio->broker_value_updated_at
+                && $portfolio->broker_value_updated_at->greaterThan(now()->subHours(24))
+            ) {
+                $marketValue = $portfolio->broker_value;
+            }
+
             $portfolio->daily_change()->create([
                 'date' => now(),
-                'total_market_value' => $metrics->get('total_market_value'),
+                'total_market_value' => $marketValue,
             ]);
         });
     }
