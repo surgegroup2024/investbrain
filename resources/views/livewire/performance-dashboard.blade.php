@@ -183,6 +183,18 @@ new class extends Component
                             {{ __('Qty') }}
                             @if($sortBy === 'quantity') <span>{{ $sortDir === 'asc' ? '▲' : '▼' }}</span> @endif
                         </th>
+                        <th class="text-right cursor-pointer" wire:click="sort('avg_cost')">
+                            {{ __('Avg Cost') }}
+                            @if($sortBy === 'avg_cost') <span>{{ $sortDir === 'asc' ? '▲' : '▼' }}</span> @endif
+                        </th>
+                        <th class="text-right cursor-pointer" wire:click="sort('market_price')">
+                            {{ __('Price') }}
+                            @if($sortBy === 'market_price') <span>{{ $sortDir === 'asc' ? '▲' : '▼' }}</span> @endif
+                        </th>
+                        <th class="text-right cursor-pointer" wire:click="sort('cost_basis')">
+                            {{ __('Cost Basis') }}
+                            @if($sortBy === 'cost_basis') <span>{{ $sortDir === 'asc' ? '▲' : '▼' }}</span> @endif
+                        </th>
                         <th class="text-right cursor-pointer" wire:click="sort('market_value')">
                             {{ __('Market Value') }}
                             @if($sortBy === 'market_value') <span>{{ $sortDir === 'asc' ? '▲' : '▼' }}</span> @endif
@@ -204,6 +216,9 @@ new class extends Component
                             <td class="font-semibold">{{ $h['symbol'] }}</td>
                             <td class="text-sm text-base-content/70 max-w-[150px] truncate">{{ $h['name'] }}</td>
                             <td class="text-right">{{ number_format($h['quantity'], 2) }}</td>
+                            <td class="text-right">{{ Number::currency($h['avg_cost'], 'USD') }}</td>
+                            <td class="text-right">{{ Number::currency($h['market_price'], 'USD') }}</td>
+                            <td class="text-right">{{ Number::currency($h['cost_basis'], 'USD') }}</td>
                             <td class="text-right">{{ Number::currency($h['market_value'], 'USD') }}</td>
                             <td class="text-right font-medium" style="color: {{ $h['gain_dollars'] >= 0 ? '#4ade80' : '#f87171' }}">
                                 {{ $h['gain_dollars'] >= 0 ? '+' : '' }}{{ Number::currency($h['gain_dollars'], 'USD') }}

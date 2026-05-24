@@ -68,6 +68,19 @@ class Transaction extends Model
 
         static::saved(function ($transaction) {
 
+            // Clear holding overrides when a new transaction is created (sync activity)
+            if ($transaction->wasRecentlyCreated) {
+                Holding::where('portfolio_id', $transaction->portfolio_id)
+                    ->where('symbol', $transaction->symbol)
+                    ->whereNotNull('quantity_override')
+                    ->orWhere(function ($q) use ($transaction) {
+                        $q->where('portfolio_id', $transaction->portfolio_id)
+                            ->where('symbol', $transaction->symbol)
+                            ->whereNotNull('avg_cost_override');
+                    })
+                    ->update(['quantity_override' => null, 'avg_cost_override' => null]);
+            }
+
             $transaction->syncToHolding();
 
             $transaction = Pipeline::send($transaction)

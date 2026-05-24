@@ -25,6 +25,7 @@ class Portfolio extends Model
         'title',
         'notes',
         'wishlist',
+        'performance_start_date',
         'account_type',
         'broker_value',
         'broker_value_updated_at',
@@ -46,6 +47,7 @@ class Portfolio extends Model
 
     protected $casts = [
         'wishlist' => 'boolean',
+        'performance_start_date' => 'date',
         'broker_value' => 'float',
         'broker_value_updated_at' => 'datetime',
     ];
@@ -269,8 +271,13 @@ class Portfolio extends Model
         $irr = $this->calculateModifiedDietz();
 
         // Determine history length for annualized display
-        $firstFlow = $this->cashFlows()->reorder('date', 'asc')->first();
-        $yearsOfHistory = $firstFlow ? $firstFlow->date->diffInDays(now()) / 365.25 : 0;
+        // Use performance_start_date override if set, otherwise use first cash flow date
+        if ($this->performance_start_date) {
+            $yearsOfHistory = $this->performance_start_date->diffInDays(now()) / 365.25;
+        } else {
+            $firstFlow = $this->cashFlows()->reorder('date', 'asc')->first();
+            $yearsOfHistory = $firstFlow ? $firstFlow->date->diffInDays(now()) / 365.25 : 0;
+        }
 
         return [
             'total_deposits' => round($deposits, 2),

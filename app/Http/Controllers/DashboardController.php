@@ -31,11 +31,10 @@ class DashboardController extends Controller
                     ->withoutWishlists()
                     ->getPortfolioMetrics();
 
-                // Substitute broker_value sum when significantly different from calculated
+                // Prefer broker-reported total when available (matches portfolio list values)
                 $brokerTotal = $nonWishlistPortfolios->sum('broker_value');
-                $calculatedTotal = $m->get('total_market_value', 0);
 
-                if ($brokerTotal > 0 && abs($brokerTotal - $calculatedTotal) > $brokerTotal * 0.1) {
+                if ($brokerTotal > 0) {
                     $m->put('total_market_value', $brokerTotal);
                     $m->put('total_market_gain_dollars', $brokerTotal - $m->get('total_cost_basis', 0));
                     $m->put('account_value_source', 'broker');
@@ -96,18 +95,31 @@ class DashboardController extends Controller
             ->filter()
             ->max();
 
-        // CAGR: annualize the total return using earliest cash flow date
+        // CAGR: annualize the total return
+        // If any portfolio has a performance_start_date override, use the earliest one
+        // (oldest = highest number of years from today)
         $cagr = null;
+        $cagrYears = null;
         if ($capitalDeployed > 0 && $totalReturn > -90 && $totalReturn < 2000) {
-            $firstFlow = CashFlow::whereIn('portfolio_id', $portfolioIds)
-                ->reorder('date', 'asc')
+            $earliestOverride = $nonWishlistPortfolios
+                ->whereNotNull('performance_start_date')
+                ->pluck('performance_start_date')
+                ->sort()
                 ->first();
-            if ($firstFlow) {
-                $years = $firstFlow->date->diffInDays(Carbon::now()) / 365.25;
-                if ($years >= 1) {
-                    $totalReturnDecimal = $totalReturn / 100;
-                    $cagr = (pow(1 + $totalReturnDecimal, 1 / $years) - 1) * 100;
-                }
+
+            if ($earliestOverride) {
+                $years = Carbon::parse($earliestOverride)->diffInDays(Carbon::now()) / 365.25;
+            } else {
+                $firstFlow = CashFlow::whereIn('portfolio_id', $portfolioIds)
+                    ->reorder('date', 'asc')
+                    ->first();
+                $years = $firstFlow ? $firstFlow->date->diffInDays(Carbon::now()) / 365.25 : 0;
+            }
+
+            if ($years >= 1) {
+                $cagrYears = $years;
+                $totalReturnDecimal = $totalReturn / 100;
+                $cagr = (pow(1 + $totalReturnDecimal, 1 / $years) - 1) * 100;
             }
         }
 
@@ -118,9 +130,11 @@ class DashboardController extends Controller
             'incomeThisMonth',
             'totalReturn',
             'totalProfit',
+            'totalMarketValue',
             'optionsIncomeTotal',
             'accountValueAsOf',
-            'cagr'
+            'cagr',
+            'cagrYears'
         ));
     }
 }

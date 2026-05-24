@@ -25,6 +25,9 @@ new class extends Component
     #[Rule('sometimes|nullable|boolean')]
     public bool $wishlist = false;
 
+    #[Rule('sometimes|nullable|date')]
+    public ?string $performance_start_date = null;
+
     public bool $confirmingPortfolioDeletion = false;
 
     // methods
@@ -35,6 +38,7 @@ new class extends Component
             $this->title = $this->portfolio->title;
             $this->notes = $this->portfolio->notes;
             $this->wishlist = $this->portfolio->wishlist;
+            $this->performance_start_date = $this->portfolio->performance_start_date?->format('Y-m-d');
         }
     }
 
@@ -83,6 +87,12 @@ new class extends Component
                 {{ __('Treat this portfolio as a "wishlist" (holdings will be excluded from realized gains, unrealized gains, and dividends)') }}
             </x-slot:hint>
         </x-ui.toggle>
+
+        <x-ui.input type="date" label="{{ __('Performance Start Date') }}" wire:model="performance_start_date" >
+            <x-slot:hint>
+                {{ __('Override when CAGR calculation begins. Leave blank to use the date of your first cash flow.') }}
+            </x-slot:hint>
+        </x-ui.input>
 
         <x-slot:actions>
             @if ($portfolio)

@@ -16,6 +16,8 @@ class HoldingRequest extends FormRequest
 
         $rules = [
             'reinvest_dividends' => ['sometimes', 'boolean'],
+            'quantity_override' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'avg_cost_override' => ['sometimes', 'nullable', 'numeric', 'min:0'],
         ];
 
         return $rules;

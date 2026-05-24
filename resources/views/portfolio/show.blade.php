@@ -3,7 +3,7 @@
 <x-layouts.app>
     <style>
         .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; }
-        @media (min-width: 48rem) { .stat-grid { grid-template-columns: repeat(5, 1fr); } }
+        @media (min-width: 48rem) { .stat-grid { grid-template-columns: repeat(6, 1fr); } }
         .gain-pos { color: #4ade80 !important; }
         .gain-neg { color: #f87171 !important; }
     </style>
@@ -13,10 +13,12 @@
         $costBasis = $metrics->get('total_cost_basis', 0);
         $unrealizedPct = $costBasis > 0 ? ($unrealized / $costBasis) * 100 : 0;
         $yearsHist = $capitalMetrics['years_of_history'] ?? 0;
-        // CAGR: annualize the cost-basis-based return
+        $netCashIn = $capitalMetrics['net_invested'] ?? 0;
+        // CAGR: annualize using net invested capital and current value
+        $currentValue = $capitalMetrics['current_value'] ?? $metrics->get('total_market_value', 0);
         $cagr = null;
-        if ($yearsHist >= 1 && $costBasis > 0) {
-            $cagr = (pow(1 + $unrealizedPct / 100, 1 / $yearsHist) - 1) * 100;
+        if ($yearsHist >= 1 && $netCashIn > 0) {
+            $cagr = (pow($currentValue / $netCashIn, 1 / $yearsHist) - 1) * 100;
         }
     @endphp
     <div x-data>
@@ -91,6 +93,10 @@
                     <div class="mt-1 text-xl font-black">{{ Number::currency($costBasis) }}</div>
                 </div>
                 <div class="p-4 border-b md:border-b-0 md:border-r border-base-300">
+                    <div class="text-xs font-medium text-base-content/60">{{ __('Net Cash In') }}</div>
+                    <div class="mt-1 text-xl font-black">{{ Number::currency($netCashIn) }}</div>
+                </div>
+                <div class="p-4 border-b md:border-b-0 md:border-r border-base-300">
                     <div class="text-xs font-medium text-base-content/60">{{ __('Gain / Loss') }}</div>
                     <div class="mt-1 text-xl font-black {{ $unrealized >= 0 ? 'gain-pos' : 'gain-neg' }}">{{ Number::currency($unrealized) }}</div>
                 </div>
@@ -98,7 +104,7 @@
                     <div class="text-xs font-medium text-base-content/60">{{ __('Return') }}</div>
                     <div class="mt-1 text-xl font-black {{ $unrealizedPct >= 0 ? 'gain-pos' : 'gain-neg' }}">{{ number_format($unrealizedPct, 1) }}%</div>
                 </div>
-                <div class="p-4">
+                <div class="p-4" title="{{ $cagr !== null ? 'CAGR = (Current Value / Net Cash In)^(1/Years) - 1 = ('.Number::currency($currentValue).' / '.Number::currency($netCashIn).')^(1/'.number_format($yearsHist, 1).'y) - 1 = '.number_format($cagr, 1).'%' : 'Need ≥1 year of history and positive net cash in' }}">
                     <div class="text-xs font-medium text-base-content/60">{{ __('CAGR') }}</div>
                     @if($cagr !== null)
                     <div class="mt-1 text-xl font-black {{ $cagr >= 0 ? 'gain-pos' : 'gain-neg' }}">{{ number_format($cagr, 1) }}%</div>

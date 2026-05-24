@@ -44,6 +44,11 @@ class HoldingController extends ApiController
 
         $holding->update($request->validated());
 
-        return HoldingResource::make($holding);
+        // If overrides were set, recalculate to apply them to quantity/cost columns
+        if ($request->has('quantity_override') || $request->has('avg_cost_override')) {
+            $holding->syncTransactionsAndDividends();
+        }
+
+        return HoldingResource::make($holding->fresh());
     }
 }

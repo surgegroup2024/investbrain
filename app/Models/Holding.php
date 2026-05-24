@@ -24,7 +24,9 @@ class Holding extends Model
         'portfolio_id',
         'symbol',
         'quantity',
+        'quantity_override',
         'average_cost_basis',
+        'avg_cost_override',
         'total_cost_basis',
         'realized_gain_dollars',
         'dividends_earned',
@@ -37,7 +39,9 @@ class Holding extends Model
         'splits_synced_at' => 'datetime',
         'first_transaction_date' => 'datetime',
         'quantity' => 'float',
+        'quantity_override' => 'float',
         'average_cost_basis' => 'float',
+        'avg_cost_override' => 'float',
         'total_cost_basis' => 'float',
         'realized_gain_dollars' => 'float',
         'dividends_earned' => 'float',
@@ -436,10 +440,13 @@ class Holding extends Model
         : 0;
 
         // update holding
+        $effectiveQty = $this->quantity_override ?? $total_quantity;
+        $effectiveAvgCost = $this->avg_cost_override ?? $average_cost_basis;
+
         $this->fill([
-            'quantity' => $total_quantity,
-            'average_cost_basis' => $average_cost_basis,
-            'total_cost_basis' => $total_quantity * $average_cost_basis,
+            'quantity' => $effectiveQty,
+            'average_cost_basis' => $effectiveAvgCost,
+            'total_cost_basis' => $effectiveQty * $effectiveAvgCost,
             'realized_gain_dollars' => $query->realized_gain_dollars ?? 0,
             'dividends_earned' => $this->dividends->sum('total_received'),
         ]);

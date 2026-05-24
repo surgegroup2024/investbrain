@@ -30,7 +30,7 @@
                     <div class="text-xs font-medium text-base-content/60">{{ __('Return') }}</div>
                     <div class="mt-1 text-xl font-black {{ $totalReturn >= 0 ? 'gain-pos' : 'gain-neg' }}">{{ number_format($totalReturn, 1) }}%</div>
                 </div>
-                <div class="p-4">
+                <div class="p-4" title="{{ $cagr !== null ? 'CAGR = (Current Value / Net Cash In)^(1/Years) - 1 = ('.Number::currency($totalMarketValue).' / '.Number::currency($capitalDeployed).')^(1/'.number_format($cagrYears, 1).'y) - 1 = '.number_format($cagr, 1).'%' : 'Need ≥1 year of history and positive net cash in' }}">
                     <div class="text-xs font-medium text-base-content/60">{{ __('CAGR') }}</div>
                     @if($cagr !== null)
                     <div class="mt-1 text-xl font-black {{ $cagr >= 0 ? 'gain-pos' : 'gain-neg' }}">{{ number_format($cagr, 1) }}%</div>
