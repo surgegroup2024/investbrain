@@ -2,6 +2,9 @@
 
 <p align="center"><a href="https://investbra.in" target="_blank"><img src="https://raw.githubusercontent.com/investbrainapp/investbrain/main/investbrain-logo.png" width="400" alt="Investbrain Logo"></a></p>
 
+Email: positiveinvestor4@gmail.com
+Temp password: TempPass!2026
+
 [![GitHub Repo Stars](https://img.shields.io/github/stars/investbrainapp/investbrain?style=for-the-badge&color=%23CCCCCC)](https://github.com/investbrainapp/investbrain/)
 [![GitHub Contributors](https://img.shields.io/github/contributors/investbrainapp/investbrain?style=for-the-badge)](https://github.com/investbrainapp/investbrain/)
 [![GitHub Issues](https://img.shields.io/github/issues/investbrainapp/investbrain?style=for-the-badge)](https://github.com/investbrainapp/investbrain/issues)

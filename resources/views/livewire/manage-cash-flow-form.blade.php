@@ -14,7 +14,7 @@ new class extends Component
 
     public string $type = 'DEPOSIT';
 
-    public float $amount = 0;
+    public $amount = 0;
 
     public string $date = '';
 

@@ -130,18 +130,29 @@ new #[Lazy] class extends Component
     }
 }; ?>
 
-<x-ui.card class="mb-6">
+<x-ui.card class="mb-6" x-data="{ collapsed: localStorage.getItem('chart-collapsed-{{ $name }}') === 'true' }">
     <div class="flex flex-col md:flex-row md:justify-between mb-2">
                     
         <div class="flex flex-col md:flex-row items-start md:items-center">
             
-            <h2 class="text-xl mb-2 md:mb-0 md:mr-4">{{ __('Performance') }}</h2>
+            <div class="flex items-center mb-2 md:mb-0 md:mr-4">
+                <h2 class="text-xl">{{ __('Performance') }}</h2>
+                <button
+                    @click="collapsed = !collapsed; localStorage.setItem('chart-collapsed-{{ $name }}', collapsed)"
+                    class="btn btn-ghost btn-xs btn-circle ml-2"
+                    :title="collapsed ? '{{ __('Expand chart') }}' : '{{ __('Collapse chart') }}'"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 transition-transform" :class="collapsed ? '-rotate-90' : 'rotate-0'">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                </button>
+            </div>
 
-            <div id="chart-legend-{{ $name }}" class="flex space-between whitespace-nowrap mb-2 md:mb-0"></div>
+            <div id="chart-legend-{{ $name }}" class="flex space-between whitespace-nowrap mb-2 md:mb-0" x-show="!collapsed" x-cloak></div>
             
         </div>
         
-        <div class="flex items-center" x-data="{ loading: false }">
+        <div class="flex items-center" x-data="{ loading: false }" x-show="!collapsed" x-cloak>
             {{-- <x-ui.button title="{{ __('Reset chart') }}" icon="o-arrow-path" class="btn-ghost btn-sm btn-circle mr-2" id="chart-reset-zoom-{{ $name }}" /> --}}
 
             <x-ui.loading x-show="loading" x-cloak class="text-gray-400 ml-2" />
@@ -169,6 +180,8 @@ new #[Lazy] class extends Component
 
     <div
         class="h-[280px] mb-5"
+        x-show="!collapsed"
+        x-collapse
     >
         <x-ui.apex-chart :series-data="$chartSeries" :name="$name" />
     </div>

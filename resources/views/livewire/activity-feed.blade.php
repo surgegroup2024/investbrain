@@ -68,7 +68,7 @@ new class extends Component
         $this->page = 1;
     }
 
-    public function getActivitiesProperty(): Collection
+    public function getFilteredCollectionProperty(): Collection
     {
         $userPortfolios = auth()->user()->portfolios;
         $portfolioIds = $userPortfolios->pluck('id');
@@ -206,30 +206,30 @@ new class extends Component
             $activities = $activities->merge($options);
         }
 
-        // Sort by date descending and paginate
+        // Sort by date descending
         return $activities
             ->sortByDesc('datetime')
-            ->values()
-            ->take($this->page * $this->perPage);
+            ->values();
+    }
+
+    public function getActivitiesProperty(): Collection
+    {
+        return $this->filteredCollection->take($this->page * $this->perPage);
     }
 
     public function getTotalCountProperty(): int
     {
-        // Rough count for "load more" logic
-        $portfolioIds = auth()->user()->portfolios->pluck('id');
-        $count = 0;
+        return $this->filteredCollection->count();
+    }
 
-        if (! $this->filterType || in_array($this->filterType, ['BUY', 'SELL'])) {
-            $count += Transaction::whereIn('portfolio_id', $portfolioIds)->count();
-        }
-        if (! $this->filterType || in_array($this->filterType, ['DEPOSIT', 'WITHDRAWAL'])) {
-            $count += CashFlow::whereIn('portfolio_id', $portfolioIds)->count();
-        }
-        if (! $this->filterType || in_array($this->filterType, ['OPTIONS'])) {
-            $count += OptionActivity::whereIn('portfolio_id', $portfolioIds)->count();
-        }
+    public function getFilteredTotalProperty(): float
+    {
+        return $this->filteredCollection->sum('amount');
+    }
 
-        return $count;
+    public function getHasActiveFiltersProperty(): bool
+    {
+        return $this->filterBrokerage || $this->filterType || $this->filterSymbol || $this->filterDateFrom || $this->filterDateTo;
     }
 }; ?>
 
@@ -280,6 +280,18 @@ new class extends Component
             />
         @endif
     </div>
+
+    {{-- Summary bar --}}
+    @if($this->hasActiveFilters)
+        <div class="flex items-center justify-between px-4 py-2 mb-3 rounded-lg bg-base-200/60 text-sm">
+            <span class="text-base-content/70">
+                {{ __('Showing') }} {{ count($this->activities) }} {{ __('of') }} {{ $this->totalCount }} {{ __('results') }}
+            </span>
+            <span class="font-semibold {{ $this->filteredTotal >= 0 ? 'text-success' : 'text-error' }}">
+                {{ __('Total') }}: {{ $this->filteredTotal >= 0 ? '+' : '' }}{{ Number::currency(abs($this->filteredTotal), 'USD') }}
+            </span>
+        </div>
+    @endif
 
     {{-- Activity List --}}
     <x-ui.card>

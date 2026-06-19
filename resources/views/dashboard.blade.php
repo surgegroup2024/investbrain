@@ -34,6 +34,7 @@
                     <div class="text-xs font-medium text-base-content/60">{{ __('CAGR') }}</div>
                     @if($cagr !== null)
                     <div class="mt-1 text-xl font-black {{ $cagr >= 0 ? 'gain-pos' : 'gain-neg' }}">{{ number_format($cagr, 1) }}%</div>
+                    <div class="mt-1 text-xs text-base-content/40">{{ number_format($cagrYears, 1) }} years</div>
                     @else
                     <div class="mt-1 text-xl font-black text-base-content/40">&mdash;</div>
                     @endif
